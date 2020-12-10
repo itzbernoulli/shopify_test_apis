@@ -10,17 +10,48 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2020_12_09_150931) do
+ActiveRecord::Schema.define(version: 2020_12_09_180752) do
 
   # These are extensions that must be enabled in order to support this database
+  enable_extension "pgcrypto"
   enable_extension "plpgsql"
+  enable_extension "uuid-ossp"
 
-  create_table "users", force: :cascade do |t|
+  create_table "customers", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.uuid "user_id", null: false
+    t.string "first_name"
+    t.string "last_name"
+    t.string "Email"
+    t.string "Company"
+    t.string "address1"
+    t.string "address2"
+    t.string "city"
+    t.string "province"
+    t.string "province_code"
+    t.string "country"
+    t.string "country_code"
+    t.string "Zip"
+    t.string "phone"
+    t.string "accepts_marketing"
+    t.float "total_spent"
+    t.string "total_orders"
+    t.string "integer"
+    t.string "Tags"
+    t.string "Note"
+    t.string "tax_exempt"
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["user_id"], name: "index_customers_on_user_id"
+  end
+
+  create_table "users", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.string "store"
     t.string "nonce"
     t.string "access_token"
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
+    t.string "scopes"
   end
 
+  add_foreign_key "customers", "users"
 end
