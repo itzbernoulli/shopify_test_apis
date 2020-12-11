@@ -1,6 +1,6 @@
 class UsersController < ApplicationController
   before_action :set_user, only: [:show, :edit, :update, :destroy]
-
+  require 'apis/shopify_apis'
   # GET /users
   # GET /users.json
   def index
@@ -64,38 +64,14 @@ class UsersController < ApplicationController
     p params['code']
     p params['hmac']
     store =  params['shop']
+    p store
     p params['state']
     p params['timestamp']
+    user = User.find_by_store(store)
+    #check values returned and compare
+    response = ShopifyApi::Shopify.get_access_token(user, params['code'])
+    redirect_to root_path
 
-        body = {
-              "client_id": ENV['SHOPIFY_API_KEY'],
-              "client_secret": ENV['SHOPIFY_API_SECRET_KEY'],
-              "code": params['code']
-        }
-        url = URI("https://#{params['shop']}/admin/oauth/access_token")
-        http = Net::HTTP.new(url.host, url.port)
-        http.use_ssl = true
-        http.verify_mode = OpenSSL::SSL::VERIFY_NONE
-        p url
-        p http
-
-        request = Net::HTTP::Post.new(url)
-        request["content-type"] = 'application/json'
-        request["cache-control"] = 'no-cache'
-        request.body = body.to_json
-
-        response = JSON.parse(http.request(request).body)
-
-        user = User.find_by_store(store)
-        if user.update_attributes(:access_token => response['access_token'], :scopes => response['scope'])
-          # p 'updated successfully'
-          GetCustomersJob.perform_later(user.id)
-          redirect_to root_path
-        end
-        # p store
-        # p response['access_token']
-        # p response['scope']
-        # p response
   end
 
   private
@@ -108,4 +84,13 @@ class UsersController < ApplicationController
     def user_params
       params.require(:user).permit(:store, :nonce, :access_token)
     end
+
+    def check_hmac(message)
+      digest = OpenSSL::Digest.new(’sha256’)
+      secret = "hush"
+      message = "code=0907a61c0c8d55e99db179b68161bc00&shop=some-shop.myshopify.com&state=0.6784241404160823&timestamp=1337178173"
+
+      digest = OpenSSL::HMAC.hexdigest(digest, secret, message)
+      ActiveSupport::SecurityUtils.secure_compare(digest, "700e2dadb827fcc8609e9d5ce208b2e9cdaab9df07390d2cbca10d7c328fc4bf")
+  end
 end
