@@ -61,17 +61,20 @@ class UsersController < ApplicationController
   end
 
   def callback
-    p params['code']
-    p params['hmac']
     store =  params['shop']
-    p store
-    p params['state']
-    p params['timestamp']
+    message = "code=#{params['code']}&shop=#{params['shop']}&state=#{params['state']}&timestamp=#{params['timestamp']}"
     user = User.find_by_store(store)
-    #check values returned and compare
-    response = ShopifyApi::Shopify.get_access_token(user, params['code'])
-    redirect_to root_path
+    #verify nonce and hmac values coming from shopify
+    if (check_hmac(message) && user.check_nonce=params['state'])
+      #retrieve shopify access token for customer
+      #there should be a response check here incase response is an error
+      response = ShopifyApi::Shopify.get_access_token(user, params['code'])
 
+      if user.update_attributes(:access_token => response['access_token'], :scopes => response['scope'])
+        GetCustomersJob.perform_later(user.id)
+        redirect_to root_url
+      end
+    end
   end
 
   private
@@ -86,7 +89,7 @@ class UsersController < ApplicationController
     end
 
     def check_hmac(message)
-      digest = OpenSSL::Digest.new(’sha256’)
+      digest = OpenSSL::Digest.new('sha256')
       secret = "hush"
       message = "code=0907a61c0c8d55e99db179b68161bc00&shop=some-shop.myshopify.com&state=0.6784241404160823&timestamp=1337178173"
 

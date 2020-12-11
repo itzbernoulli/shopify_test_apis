@@ -27,10 +27,7 @@ module ShopifyApi
         request.body = body.to_json
 
         response = JSON.parse(http.request(request).body)
-        if user.update_attributes(:access_token => response['access_token'], :scopes => response['scope'])
-            GetCustomersJob.perform_later(user.id)
-            redirect_to root_url
-        end
+      
       rescue *HTTP_ERRORS => error
           raise
       end
@@ -52,6 +49,7 @@ module ShopifyApi
             verification_response = JSON.parse(response.body)
 
             #change this to insert all or a bulk insert method for efficiency
+
             verification_response['customers'].each do |c| 
             Customer.create(
                 user_id: user.id,
