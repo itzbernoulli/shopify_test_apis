@@ -1,24 +1,4 @@
-# README
+# Shopify API Test
 
-This README would normally document whatever steps are necessary to get the
-application up and running.
+This is a repository that implements shopify oauth call and gets all customers in a shop
 
-Things you may want to cover:
-
-* Ruby version
-
-* System dependencies
-
-* Configuration
-
-* Database creation
-
-* Database initialization
-
-* How to run the test suite
-
-* Services (job queues, cache servers, search engines, etc.)
-
-* Deployment instructions
-
-* ...
