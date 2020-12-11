@@ -17,19 +17,17 @@
 
 <h1>Customers</h1>
 
-<table>
+<table class="table table-hover">
   <thead>
     <tr>
-      <th>Firstname</th>
-      <th>Lastname</th>
-      <th>Email</th>
-      <th colspan="3"></th>
+      <th scope="col">Firstname</th>
+      <th scope="col">Lastname</th>
+      <th scope="col">Email</th>
     </tr>
   </thead>
-
-  <tbody>
+    <tbody>
     <% @user.customers.each do |customer| %>
-      <tr>
+      <tr class="<%= cycle("table-active", "table-secondary")%>">
         <td><%= customer.first_name %></td>
         <td><%= customer.last_name %></td>
         <td><%= customer.Email %></td>
@@ -37,7 +35,6 @@
     <% end %>
   </tbody>
 </table>
-
 <br>
 
 <%= link_to 'Edit', edit_user_path(@user) %> |

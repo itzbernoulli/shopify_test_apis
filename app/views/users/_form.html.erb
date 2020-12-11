@@ -1,7 +1,7 @@
 <%= form_with(model: user, local: true) do |form| %>
   <% if user.errors.any? %>
     <div id="error_explanation">
-      <h2><%= pluralize(user.errors.count, "error") %> prohibited this user from being saved:</h2>
+      <h2><%= pluralize(user.errors.count, "error") %> prohibited this store from being saved:</h2>
 
       <ul>
         <% user.errors.full_messages.each do |message| %>
@@ -10,13 +10,17 @@
       </ul>
     </div>
   <% end %>
-
-  <div class="field">
-    <%= form.label :store %>
-    <%= form.text_field :store, placeholder: 'my_store.myshopify.com' %>
+  <fieldset>
+  <div class="row">
+    <div class="col-6">
+      <div class="form-group">
+        <%= form.text_field :store, placeholder: 'my_store.myshopify.com', class: "form-control", value: "turdstore.myshopify.com"  %>
+      </div>
+    </div>
   </div>
 
   <div class="actions">
-    <%= form.submit %>
+    <%= form.submit "Submit",  class: "btn btn-primary"%>
   </div>
+   </fieldset>
 <% end %>
