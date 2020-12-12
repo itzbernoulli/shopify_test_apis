@@ -1,16 +1,15 @@
 <p id="notice"><%= notice %></p>
 
-<table>
+<table class="table table-hover">
   <thead>
     <tr>
-      <th>Store</th>
+      <th scope="col">Shopify Store Link</th>
       <th colspan="3"></th>
     </tr>
   </thead>
-
-  <tbody>
+    <tbody>
     <% @users.each do |user| %>
-      <tr>
+      <tr class="<%= cycle("table-active", "table-secondary")%>">
         <td><%= user.store %></td>
         <td><%= link_to 'Show', user %></td>
         <td><%= link_to 'Edit', edit_user_path(user) %></td>
@@ -23,3 +22,4 @@
 <br>
 
 <%= link_to 'New User', new_user_path %>
+
