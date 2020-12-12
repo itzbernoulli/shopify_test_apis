@@ -36,7 +36,7 @@ module ShopifyApi
 
     def self.get_store_customers(user)
         begin
-            url = URI("https://#{user.store}" + CUSTOMERS_URL)
+            url = URI("https://#{user.store}" + CUSTOMERS_URL + "?fields=first_name,last_name,email,")
             http = Net::HTTP.new(url.host, url.port)
             http.use_ssl = true
             http.verify_mode = OpenSSL::SSL::VERIFY_NONE
@@ -48,16 +48,21 @@ module ShopifyApi
 
             verification_response = JSON.parse(response.body)
 
+            # p verification_response
             #change this to insert all or a bulk insert method for efficiency
 
-            verification_response['customers'].each do |c| 
-            Customer.create(
-                user_id: user.id,
-                first_name: c['first_name'],
-                last_name: c['last_name'],
-                Email: c['email'],
+            verification_response['customers']
+            Customer.insert_all(
+              verification_response['customers'], user.id
             )
-            end
+            # verification_response['customers'].each do |c| 
+            # Customer.create(
+            #     user_id: user.id,
+            #     first_name: c['first_name'],
+            #     last_name: c['last_name'],
+            #     email: c['email'],
+            # )
+            # end
         rescue *HTTP_ERRORS => error
             raise
         end
