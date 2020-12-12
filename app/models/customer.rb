@@ -5,6 +5,12 @@ class Customer < ApplicationRecord
     normalized = normalize(records, user_id)
     super(normalized)
   end
+
+  def self.upsert_all(records, user_id)
+    normalized = normalize(records, user_id)
+    super(normalized)
+  end
+
   def self.normalize(records, user_id)
     records.each do |rec|
       rec['user_id'] = user_id
