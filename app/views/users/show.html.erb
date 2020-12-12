@@ -1,20 +1,14 @@
 <p id="notice"><%= notice %></p>
-
+<br/>
 <p>
   <strong>Store:</strong>
   <%= @user.store %>
 </p>
 
-<p>
-  <strong>Nonce:</strong>
-  <%= @user.nonce %>
-</p>
-
-<p>
-  <strong>Access token:</strong>
-  <%= @user.access_token %>
-</p>
-
+<br/>
+<%= link_to 'Edit', edit_user_path(@user) %> |
+<%= link_to 'Back', users_path %>
+<br/>
 <h1>Customers</h1>
 
 <table class="table table-hover">
@@ -36,6 +30,3 @@
   </tbody>
 </table>
 <br>
-
-<%= link_to 'Edit', edit_user_path(@user) %> |
-<%= link_to 'Back', users_path %>
