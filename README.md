@@ -1,6 +1,8 @@
 # Shopify API Test
 
-This is a repository that implements shopify oauth call and gets all customers in a shop
+This is a repository that implements shopify oauth call and gets all customers in a shopify store
+
+A working version of this app can be found on heroku [SHOPIFYLY](https://shopifyly.herokuapp.com/)
 
 This project uses:
 
