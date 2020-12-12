@@ -50,10 +50,38 @@ module ShopifyApi
             Customer.insert_all(
               verification_response['customers'], user.id
             )
+
+            user.update_attribute(:last_customer_update_time, DateTime.now)
+
         rescue *HTTP_ERRORS => error
             raise
         end
     end
+
+    def self.update_store_customer_list(user)
+      begin
+          url = URI("https://#{user.store}" + CUSTOMERS_URL + "?fields=first_name,last_name,email&created_at_min=#{user.last_customer_update_time}&updated_at_min=#{user.last_customer_update_time}")
+          http = Net::HTTP.new(url.host, url.port)
+          http.use_ssl = true
+          http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+          request = Net::HTTP::Get.new(url)
+          request["cache-control"] = 'no-cache'
+
+          request["X-Shopify-Access-Token"] = user.access_token
+          response = http.request(request)
+
+          verification_response = JSON.parse(response.body)
+          if verification_response['customers'].count > 0
+            Customer.upsert_all(
+              verification_response['customers'], user.id
+            )
+
+            user.update_attribute(:last_customer_update_time, DateTime.now)
+          end
+      rescue *HTTP_ERRORS => error
+          raise
+      end
+  end
 
   end
 end
