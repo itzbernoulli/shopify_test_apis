@@ -62,22 +62,26 @@ class UsersController < ApplicationController
 
   def callback
     store =  params['shop']
-    message = "code=#{params['code']}&shop=#{params['shop']}&state=#{params['state']}&timestamp=#{params['timestamp']}"
     user = User.find_by_store(store)
-    #verify nonce and hmac values coming from shopify
-    if (check_hmac(message) && user.check_nonce=params['state'])
+    if (check_hmac(construct_message(params), params['hmac']) && user.check_nonce=params['state'])
       #retrieve shopify access token for customer
-      #there should be a response check here incase response is an error
       response = ShopifyApi::Shopify.get_access_token(user, params['code'])
-
       if user.update_attributes(:access_token => response['access_token'], :scopes => response['scope'])
         GetCustomersJob.perform_later(user.id)
         redirect_to root_url
+      else
+        destroy_user_and_redirect= user, 'Failed to retrieve Access Token. Please try again'
       end
+    else
+      destroy_user_and_redirect= user, 'Link Verification failed. Please try again'
     end
   end
 
   private
+    def destroy_user_and_redirect=(user, message)
+      user.destroy
+      redirect_to root_url, notice: message
+    end
     # Use callbacks to share common setup or constraints between actions.
     def set_user
       @user = User.find(params[:id])
@@ -88,12 +92,10 @@ class UsersController < ApplicationController
       params.require(:user).permit(:store, :nonce, :access_token)
     end
 
-    def check_hmac(message)
+    def check_hmac(message,hmac)
       digest = OpenSSL::Digest.new('sha256')
-      secret = "hush"
-      message = "code=0907a61c0c8d55e99db179b68161bc00&shop=some-shop.myshopify.com&state=0.6784241404160823&timestamp=1337178173"
-
+      secret = ENV['SHOPIFY_API_SECRET_KEY']
       digest = OpenSSL::HMAC.hexdigest(digest, secret, message)
-      ActiveSupport::SecurityUtils.secure_compare(digest, "700e2dadb827fcc8609e9d5ce208b2e9cdaab9df07390d2cbca10d7c328fc4bf")
+      ActiveSupport::SecurityUtils.secure_compare(digest, hmac)
   end
 end
