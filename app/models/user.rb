@@ -21,6 +21,4 @@ class User < ApplicationRecord
     def generate_nonce
         self.nonce = SecureRandom.uuid[0..5]
     end
-
-
 end
