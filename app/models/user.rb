@@ -9,7 +9,7 @@ class User < ApplicationRecord
     def auth_url
         api_key = ENV['SHOPIFY_API_KEY']
         scopes = 'read_customers'
-        redirect_uri = 'https://localhost:3000/auth/shopify/callback'
+        redirect_uri = ENV['CALLBACK_URL']
         'https://' + self.store + '/admin/oauth/authorize?client_id='+ ENV['SHOPIFY_API_KEY'] + '&scope=' + scopes + '&redirect_uri='+ redirect_uri + '&state=' + self.nonce + '&grant_options[]='
     end
 
