@@ -1,87 +1,51 @@
 module ShopifyApi
   class Shopify
-
+    require 'apis/shopify_request'
     HTTP_ERRORS = [
-        Timeout::Error, Errno::EINVAL, Errno::ECONNRESET, EOFError,
-        Net::HTTPBadResponse, Net::HTTPHeaderSyntaxError, Net::ProtocolError
-      ]
+      Timeout::Error, Errno::EINVAL, Errno::ECONNRESET, EOFError,
+      Net::HTTPBadResponse, Net::HTTPHeaderSyntaxError, Net::ProtocolError
+    ].freeze
 
-    OAUTH_URL = "/admin/oauth/access_token"
-    CUSTOMERS_URL = "/admin/api/2020-10/customers.json"
-
-
+    OAUTH_URL = '/admin/oauth/access_token'.freeze
+    CUSTOMERS_URL = '/admin/api/2020-10/customers.json?fields=first_name,last_name,email'.freeze
+    
     def self.get_access_token(user, code)
       begin
-        body = {
-          "client_id": ENV['SHOPIFY_API_KEY'],
-          "client_secret": ENV['SHOPIFY_API_SECRET_KEY'],
-          "code": code
-        }
+        body = { "client_id": ENV['SHOPIFY_API_KEY'], "client_secret": ENV['SHOPIFY_API_SECRET_KEY'], "code": code }
         url = URI("https://#{user.store}" + OAUTH_URL)
-        http = Net::HTTP.new(url.host, url.port)
-        http.use_ssl = true
-        http.verify_mode = OpenSSL::SSL::VERIFY_NONE
-        request = Net::HTTP::Post.new(url)
-        request["content-type"] = 'application/json'
-        request["cache-control"] = 'no-cache'
-        request.body = body.to_json
-
-        response = JSON.parse(http.request(request).body)
-      
-      rescue *HTTP_ERRORS => error
-          raise
+        ShopifyRequest.get_token(url, body)
+      rescue *HTTP_ERRORS
+        raise
       end
     end
 
 
     def self.get_store_customers(user)
-        begin
-            url = URI("https://#{user.store}" + CUSTOMERS_URL + "?fields=first_name,last_name,email,")
-            http = Net::HTTP.new(url.host, url.port)
-            http.use_ssl = true
-            http.verify_mode = OpenSSL::SSL::VERIFY_NONE
-            request = Net::HTTP::Get.new(url)
-            request["cache-control"] = 'no-cache'
-
-            request["X-Shopify-Access-Token"] = user.access_token
-            response = http.request(request)
-
-            verification_response = JSON.parse(response.body)
-            Customer.insert_all(
-              verification_response['customers'], user.id
-            )
-
-            user.update_attribute(:last_customer_update_time, DateTime.now)
-
-        rescue *HTTP_ERRORS => error
-            raise
+      begin
+        url = URI("https://#{user.store}" + CUSTOMERS_URL)
+        verification_response = ShopifyRequest.get_request(url, user)
+        if verification_response['customers'].count.positive?
+          Customer.insert_all(verification_response['customers'], user.id)
+          user.update_attribute(:last_customer_update_time, DateTime.now)
         end
+      rescue *HTTP_ERRORS
+        raise
+      end
     end
 
     def self.update_store_customer_list(user)
       begin
-          url = URI("https://#{user.store}" + CUSTOMERS_URL + "?fields=first_name,last_name,email&created_at_min=#{user.last_customer_update_time}&updated_at_min=#{user.last_customer_update_time}")
-          http = Net::HTTP.new(url.host, url.port)
-          http.use_ssl = true
-          http.verify_mode = OpenSSL::SSL::VERIFY_NONE
-          request = Net::HTTP::Get.new(url)
-          request["cache-control"] = 'no-cache'
-
-          request["X-Shopify-Access-Token"] = user.access_token
-          response = http.request(request)
-
-          verification_response = JSON.parse(response.body)
-          if verification_response['customers'].count > 0
-            Customer.upsert_all(
-              verification_response['customers'], user.id
-            )
-
-            user.update_attribute(:last_customer_update_time, DateTime.now)
-          end
-      rescue *HTTP_ERRORS => error
-          raise
+        url = URI("https://#{user.store}#{CUSTOMERS_URL}&created_at_min=
+        #{user.last_customer_update_time}&updated_at_min=#{user.last_customer_update_time}")
+        verification_response = ShopifyRequest.get_request(url, user)
+        if verification_response['customers'].count.positive?
+          Customer.upsert_all(verification_response['customers'], user.id)
+          user.update_attribute(:last_customer_update_time, DateTime.now)
+        end
+      rescue *HTTP_ERRORS
+        raise
       end
-  end
+    end
 
   end
 end
