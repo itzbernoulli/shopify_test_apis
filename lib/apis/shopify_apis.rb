@@ -19,7 +19,6 @@ module ShopifyApi
       end
     end
 
-
     def self.get_store_customers(user)
       begin
         url = URI("https://#{user.store}" + CUSTOMERS_URL)
